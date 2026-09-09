@@ -1,12 +1,12 @@
 FROM rust:latest
 
 WORKDIR /usr/src/Steam-API-Handler
-COPY ../ .
+COPY . .
 
-RUN useradd app
+RUN useradd -m app
 USER app
-EXPOSE 9116
 
 RUN cargo build
+EXPOSE 9116
 
-CMD ["cargo","run"]
+CMD ["cargo", "run"]
