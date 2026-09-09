@@ -9,14 +9,14 @@ const WORKERS_SIZE: usize = 8;
 
 fn main() {
 
-    let ip_var = "STEAM_API_HANDLER_IP_ADDRESS";
-    let tcp_listener_address = match env::var(ip_var){
+    let port_var = "STEAM_API_HANDLER_IP_PORT";
+    let tcp_listener_address = match env::var(port_var){
         Ok(val) => {
-            println!("Loaded IP address");
+            println!("Loaded port value");
             val
         },
         Err(e) => {
-            panic!("Error loading IP address. Set IP address and port in environment variable STEAM_API_HANDLER_IP_ADDRESS: {:#?}", e);
+            panic!("Error loading port value. Set port in environment variable STEAM_API_HANDLER_PORT: {:#?}", e);
         },
     };
 
@@ -31,7 +31,7 @@ fn main() {
         },
     };
 
-    let listener_result = TcpListener::bind(tcp_listener_address);
+    let listener_result = TcpListener::bind("127.0.0.1:".to_owned() + &*tcp_listener_address.to_owned());
     let listener = match listener_result {
         Ok(listener) => listener,
         Err(error) => panic!("Problem creating the TCP Listener {:#?}", error)
@@ -177,7 +177,6 @@ fn handle_connection(stream: TcpStream, steam_key: String) {
                 }
             }
         },
-
 
         "/recently-played-games" => {
             let request_link =
