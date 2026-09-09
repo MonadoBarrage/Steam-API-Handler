@@ -8,34 +8,41 @@ use structs::*;
 const WORKERS_SIZE: usize = 8;
 
 fn main() {
-    let listener_result = TcpListener::bind("127.0.0.1:7878");
+
+    let ip_var = "STEAM_API_HANDLER_IP_ADDRESS";
+    let tcp_listener_address = match env::var(ip_var){
+        Ok(val) => {
+            println!("Loaded IP address");
+            val
+        },
+        Err(e) => {
+            panic!("Error loading IP address. Set IP address and port in environment variable STEAM_API_HANDLER_IP_ADDRESS: {:#?}", e);
+        },
+    };
+
+    let key_var = "STEAM_KEY";
+    let steam_key= match env::var(key_var) {
+        Ok(val) => {
+            println!("Loaded Steam Key");
+            val
+        },
+        Err(e) => {
+            panic!("Error loading Steam Key. Set Steam key in environmental variable STEAM_KEY: {:#?}", e);
+        },
+    };
+
+    let listener_result = TcpListener::bind(tcp_listener_address);
     let listener = match listener_result {
         Ok(listener) => listener,
         Err(error) => panic!("Problem creating the TCP Listener {:#?}", error)
     };
-
     let pool = ThreadPool::new(WORKERS_SIZE);
-
-
-
-    let key_var = "STEAMKEY";
-    let steam_key;
-    match env::var(key_var) {
-        Ok(val) => {
-            steam_key = val;
-            println!("Loaded Steam Key");
-        },
-        Err(e) => {
-            panic!("Error loading Steam Key: {}", e);
-        },
-    }
-
 
     for stream in listener.incoming() {
         let stream = match stream {
             Ok(stream) => stream,
             Err(error  ) => {
-                eprintln!("Error processing incoming connection: {}", error);
+                eprintln!("Error processing incoming connection: {:#?}", error);
                 continue;
             }
         };
@@ -64,7 +71,7 @@ fn handle_connection(stream: TcpStream, steam_key: String) {
     let request_line = match request_result {
         Ok(request_line) => request_line,
         Err(error) => {
-            eprintln!("Error reading from stream: {}", error);
+            eprintln!("Error reading from stream: {:#?}", error);
             send_response(stream, "HTTP/1.1 400 BAD REQUEST".to_owned(), "Request is invalid".to_owned());
             return;
         }
@@ -103,7 +110,7 @@ fn handle_connection(stream: TcpStream, steam_key: String) {
             let body = match send_steam_request(request_link){
                 Ok(body) => body,
                 Err(e) => {
-                    eprintln!("Error sending steam request. {}", e);
+                    eprintln!("Error sending steam request. {:#?}", e);
                     send_response(stream, "HTTP/1.1 502 BAD GATEWAY".to_owned(), e.to_owned());
                     return
                 }
@@ -112,7 +119,7 @@ fn handle_connection(stream: TcpStream, steam_key: String) {
             let games_list: OwnedGames = match serde_json::from_str(&body.to_owned()) {
                 Ok(games_list) => games_list,
                 Err(e) => {
-                    eprintln!("Error deserializing steam response. {}", e);
+                    eprintln!("Error deserializing steam response. {:#?}", e);
                     send_response(stream, "HTTP/1.1 500 INTERNAL SERVER ERROR".to_owned(),
                                   "Cannot process game data".to_owned());
                     return;
@@ -138,7 +145,7 @@ fn handle_connection(stream: TcpStream, steam_key: String) {
                     games_ids_json_string
                 },
                 Err(error) => {
-                    eprintln!("Error converting input json to string: {}", error);
+                    eprintln!("Error converting input json to string: {:#?}", error);
                     send_response(stream, "HTTP/1.1 500 INTERNAL SERVER ERROR".to_owned(),
                                   "Cannot process game data".to_owned());
                     return;
@@ -150,7 +157,7 @@ fn handle_connection(stream: TcpStream, steam_key: String) {
             match send_steam_request(request_link2){
                 Ok(body) => ("HTTP/1.1 200 OK", body),
                 Err(e) => {
-                    eprintln!("Error sending steam request. {}", e);
+                    eprintln!("Error sending steam request. {:#?}", e);
                     send_response(stream, "HTTP/1.1 502 BAD GATEWAY".to_owned(), e.to_owned());
                     return;
                 }
@@ -164,7 +171,7 @@ fn handle_connection(stream: TcpStream, steam_key: String) {
             match send_steam_request(request_link){
                 Ok(body) => ("HTTP/1.1 200 OK", body),
                 Err(e) => {
-                    eprintln!("Error sending steam request. {}", e);
+                    eprintln!("Error sending steam request. {:#?}", e);
                     send_response(stream, "HTTP/1.1 502 BAD GATEWAY".to_owned(), e.to_owned());
                     return
                 }
@@ -180,7 +187,7 @@ fn handle_connection(stream: TcpStream, steam_key: String) {
             match send_steam_request(request_link){
                 Ok(body) => ("HTTP/1.1 200 OK", body),
                 Err(e) => {
-                    eprintln!("Error sending steam request. {}", e);
+                    eprintln!("Error sending steam request. {:#?}", e);
                     send_response(stream, "HTTP/1.1 502 BAD GATEWAY".to_owned(), e.to_owned());
                     return
                 }
@@ -220,7 +227,7 @@ fn send_response(mut stream: TcpStream, status:String, content: String) {
     match stream.write_all(response.as_bytes()){
         Ok(_) => (),
         Err(error) => {
-            eprintln!("Error responding to the request: {}", error);
+            eprintln!("Error responding to the request: {:#?}", error);
         }
     }
 }
