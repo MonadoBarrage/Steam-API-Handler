@@ -1,5 +1,5 @@
 #
-name: Demo Push
+name: Push Docker Image to Github Registry
 on:
   push:
     branches: [main]
@@ -12,7 +12,7 @@ env:
 
 jobs:
   push:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     permissions:
       packages: write
       contents: read
