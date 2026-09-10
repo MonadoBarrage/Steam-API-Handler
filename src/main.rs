@@ -31,7 +31,7 @@ fn main() {
         },
     };
 
-    let listener_result = TcpListener::bind("127.0.0.1:".to_owned() + &*tcp_listener_address.to_owned());
+    let listener_result = TcpListener::bind("0.0.0.0:".to_owned() + &*tcp_listener_address.to_owned());
     let listener = match listener_result {
         Ok(listener) => listener,
         Err(error) => panic!("Problem creating the TCP Listener {:#?}", error)
