@@ -1,5 +1,8 @@
 FROM rust:latest
 
+RUN useradd app
+USER app
+
 WORKDIR /usr/src/Steam-API-Handler
 COPY . .
 
