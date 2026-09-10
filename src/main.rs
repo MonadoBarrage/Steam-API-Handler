@@ -9,7 +9,7 @@ const WORKERS_SIZE: usize = 8;
 
 fn main() {
 
-    let port_var = "STEAM_API_HANDLER_IP_PORT";
+    let port_var = "STEAM_API_HANDLER_PORT";
     let tcp_listener_address = match env::var(port_var){
         Ok(val) => {
             println!("Loaded port value");
